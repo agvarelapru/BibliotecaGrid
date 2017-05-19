@@ -15,9 +15,21 @@ public class Main {
 		// TODO Apéndice de método generado automáticamente
 
 		FrmBiblioteca ventana=new FrmBiblioteca();
+		/*
+		LibroControler biblioteca=new LibroControler();
+	
 		
-		
-		
-		
+		try {
+			biblioteca.abrirConexion();
+			ArrayList<String> autores=biblioteca.autores();
+			for(int x=0;x<autores.size();x++){
+				System.out.println(autores.get(x));
+			}
+			biblioteca.cerrarConexion();
+		} catch (SQLException | ParseException | IsbnException | ClassNotFoundException e) {
+			// TODO Bloque catch generado automáticamente
+			e.printStackTrace();
+		}
+		*/
 	}
 }

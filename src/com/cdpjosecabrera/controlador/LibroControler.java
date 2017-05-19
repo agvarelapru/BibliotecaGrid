@@ -24,9 +24,13 @@ public class LibroControler {
 	
 	public ResultSet rs;
 	private ArrayList<Libro> libros;
+	private ArrayList<Libro> librosFiltro;
+	private ArrayList<String> autores;
+	
 	public LibroControler(){
 		super();
 		libros=new ArrayList<Libro>();
+		
 	}
 	public void abrirConexion() throws ClassNotFoundException, SQLException{
 		
@@ -134,6 +138,66 @@ public class LibroControler {
 		
 		
 	}
+	
+	public ArrayList<Libro> buscarLibro(String campo, String campoBusqueda) throws SQLException, ParseException, IsbnException{
+		librosFiltro=new ArrayList<Libro>();
+	String sql="select * from libros where "+campo+" like ? order by idLibros";
+	PreparedStatement preparedStatement	= cn.prepareStatement(sql);	
+	preparedStatement.setString(1, campoBusqueda);
+	rs = preparedStatement.executeQuery();
+	
+	rs.last();//con esto se va a la ultima linea buscada
+	int tam=rs.getRow();//guarda el tamaño de filas en la busqueda
+	rs.beforeFirst();//vuvuelve al principio
+	if(tam>0){
+	
+	while(rs.next()){
+		Fecha fechaPrestamo=new Fecha(rs.getDate("fechaPrestamo"));
+		Fecha fechaDevolucion=new Fecha(rs.getDate("fechaDevolucion"));
+		Libro libro=new Libro(rs.getInt("idLibros"),rs.getString("titulo"),rs.getString("autor"),rs.getString("editorial"),rs.getBoolean("prestado"),fechaPrestamo,fechaDevolucion,rs.getString("isbn"));
+		librosFiltro.add(libro);
+		libro=null;
+
+	}
+	}
+	preparedStatement=null;
+	return librosFiltro;
+
+	}
+	
+	public ArrayList<String> autores() throws SQLException, ParseException, IsbnException{
+		autores=new ArrayList<String>();
+		String sql="select distinct autor from libros";
+		PreparedStatement preparedStatement	= cn.prepareStatement(sql);	
+		rs = preparedStatement.executeQuery();	
+		
+		rs.last();//con esto se va a la ultima linea buscada
+		int tam=rs.getRow();//guarda el tamaño de filas en la busqueda
+		rs.beforeFirst();//vuvuelve al principio
+		if(tam>0){
+			while(rs.next()){
+		
+				
+				autores.add(rs.getString("autor"));
+				
+				
+			}
+		}
+		preparedStatement=null;
+		return autores;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	

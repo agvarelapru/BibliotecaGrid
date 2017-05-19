@@ -27,11 +27,19 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JCheckBox;
 import javax.swing.JTextField;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.ActionEvent;
 import java.awt.SystemColor;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.JComboBox;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class FrmBiblioteca extends JFrame {
 
@@ -41,6 +49,7 @@ public class FrmBiblioteca extends JFrame {
 	JScrollPane scrollPane;
 	DefaultTableModel dtm;
 	ArrayList<Libro> libros=new ArrayList<Libro>();
+	ArrayList<String> autores=new ArrayList<String>();
 	LibroControler biblioteca=new LibroControler();
 	String [] campos={"IDLIBROS","TITULO","AUTOR","EDITORIAL","PRESTADO","FECHA PRESTAMO","FECHA DEVOLUCION","ISBN"};
 	Libro libro=new Libro();
@@ -59,6 +68,12 @@ public class FrmBiblioteca extends JFrame {
 	Fecha fechaDevolucion=new Fecha();
 	Boolean modificar=false;Boolean modificado=false;Boolean borrado=false;
 	String isbnAnt="";
+	JLabel lblFiltroAutor;
+	JComboBox cmbAutores;
+	DefaultComboBoxModel dc;
+	String autor,campo, cadenaBusqueda,id;
+	JLabel lblBuscarLibros;
+	private JTextField txtBusca;
 	public FrmBiblioteca() {
 		setTitle("Biblioteca");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -153,32 +168,40 @@ public class FrmBiblioteca extends JFrame {
 					try {
 						fechaDevolucion=new Fecha(txtFechaDevolucion.getText());
 						libro=new Libro(Integer.parseInt(txtIdLibros.getText()),txtTitulo.getText(),txtAutor.getText(),txtEditorial.getText(),chckbxPrestado.isSelected(),fechaPrestamo,fechaDevolucion,txtIsbn.getText());
-					
+						
 					
 					
 					if(!txtTitulo.getText().equals("") || !txtAutor.getText().equals("") || !txtEditorial.getText().equals("") || !txtIsbn.getText().equals("") || !fechaDevolucion.equals("")){
 						if(modificarLibro(libro,isbnAnt)){
 							JOptionPane.showMessageDialog(table, "Libro modificado correctamente");
 							navegar=true;habilitado=true;escribir=false;
-						
+							
 							editarPanelLibros(escribir)	;
 							habilitarPanelMantenilmiento(habilitado);
 							habilitarNavegador(navegar)	;
 							cargarLista();
+							cursor=0;				
 							cargarCursor(cursor);
+							libro=null;
+							//cargarCursor(cursor);
 							modificar=false;
 						}
 							}else{
 								JOptionPane.showMessageDialog(table, "No puede haber ningun campo vacio");
 							}
 							
-						}catch (FechaIncorrecta e3) {
+						}catch (IndexOutOfBoundsException e3) {
+							// TODO Bloque catch generado automáticamente
+							JOptionPane.showMessageDialog(table,"No existe ningun libro");
+						}
+					
+						catch (FechaIncorrecta e3) {
 							// TODO Bloque catch generado automáticamente
 							JOptionPane.showMessageDialog(table, e3.getMessage());
 							txtFechaDevolucion.setBackground(Color.RED);
 						}
 					
-						catch (ArrayIndexOutOfBoundsException |  IsbnException e2) {
+						catch (IsbnException e2) {
 							// TODO Bloque catch generado automáticamente
 							JOptionPane.showMessageDialog(table, "ISBN "+txtIsbn.getText()+" incorrecto");
 							txtIsbn.setBackground(Color.RED);
@@ -218,7 +241,11 @@ public class FrmBiblioteca extends JFrame {
 					JOptionPane.showMessageDialog(table, "No puede haber ningun campo vacio");
 			}
 				
-			}catch (ArrayIndexOutOfBoundsException |  IsbnException e2) {
+			}catch (IndexOutOfBoundsException e2) {
+				// TODO Bloque catch generado automáticamente
+				JOptionPane.showMessageDialog(table,"No existe ningun libro");
+			}
+			catch (IsbnException e2) {
 				// TODO Bloque catch generado automáticamente
 				JOptionPane.showMessageDialog(table, "ISBN "+txtIsbn.getText()+" incorrecto");
 				txtIsbn.setBackground(Color.RED);
@@ -233,6 +260,8 @@ public class FrmBiblioteca extends JFrame {
 			}
 
 			}
+
+			
 		});
 		
 		btnEditar.addActionListener(new ActionListener() {
@@ -264,7 +293,11 @@ public class FrmBiblioteca extends JFrame {
 									cursor=0;
 									cargarCursor(cursor);
 								}
-							} catch (HeadlessException | ClassNotFoundException | SQLException | ParseException | IsbnException e) {
+							} catch (IndexOutOfBoundsException e) {
+								// TODO Bloque catch generado automáticamente
+								JOptionPane.showMessageDialog(table,"No existe ningun libro");
+							}
+							catch (HeadlessException | ClassNotFoundException | SQLException | ParseException | IsbnException e) {
 								// TODO Bloque catch generado automáticamente
 								JOptionPane.showMessageDialog(table, e.getMessage());
 							}
@@ -278,6 +311,65 @@ public class FrmBiblioteca extends JFrame {
 			
 		});	
 		
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent arg0) {
+				
+				int raton=table.rowAtPoint(arg0.getPoint());
+				cursor=raton;
+				cargarCursor(cursor);
+				
+			}
+		});	
+		
+		cmbAutores.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent arg0) {
+				
+				try {
+					
+					cadenaBusqueda=cmbAutores.getSelectedItem().toString();
+					if(cadenaBusqueda.equals("Todos")){
+					cargarLista();
+					cursor=0;
+					cargarCursor(cursor);
+					}else{
+						campo="autor";
+					buscarLibros(campo,cadenaBusqueda);					
+					cargarDatos(libros);
+					cursor=0;
+					cargarCursor(cursor);}
+				} catch (ClassNotFoundException | SQLException | ParseException | IsbnException | IndexOutOfBoundsException e) {
+					// TODO Bloque catch generado automáticamente
+					JOptionPane.showMessageDialog(table, e.getMessage());
+				}
+				cadenaBusqueda=null;
+			}
+			
+		});
+		
+		txtBusca.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+				
+				try {
+					cadenaBusqueda=txtBusca.getText()+"%";
+					campo="titulo";
+					buscarLibros(campo,cadenaBusqueda);
+					cargarDatos(libros);
+					cursor=0;
+					cargarCursor(cursor);
+				} catch (IndexOutOfBoundsException e) {
+					// TODO Bloque catch generado automáticamente
+					JOptionPane.showMessageDialog(table,"No existe ningun libro");
+				}	catch (ClassNotFoundException | SQLException | ParseException | IsbnException  e) {
+					// TODO Bloque catch generado automáticamente
+					JOptionPane.showMessageDialog(table, e.getMessage());
+				}				
+				
+				
+			}
+		});
+		
 	}
 
 
@@ -287,6 +379,7 @@ public class FrmBiblioteca extends JFrame {
 		
 		
 		panel = new JPanel();
+		panel.setBorder(new LineBorder(new Color(0, 0, 255), 3));
 		panel.setBounds(10, 251, 754, 164);
 		contentPane.add(panel);
 		panel.setLayout(new BorderLayout(0, 0));
@@ -295,8 +388,7 @@ public class FrmBiblioteca extends JFrame {
 		panel.add(scrollPane, BorderLayout.CENTER);
 		
 		dtm=new DefaultTableModel();
-		table = new JTable(dtm);
-		table.setEnabled(false);
+		table = new JTable(dtm);		
 		scrollPane.setViewportView(table);	
 		
 		//etiquetas libros para egregar modificar etc.
@@ -457,8 +549,39 @@ public class FrmBiblioteca extends JFrame {
 		btnFinal.setBounds(288, 30, 77, 60);
 		panelNavegador.add(btnFinal);
 		
+		lblFiltroAutor = new JLabel("Filtro autor");
+		lblFiltroAutor.setBounds(10, 426, 94, 14);
+		contentPane.add(lblFiltroAutor);
+		
+		
+		cargarAutores();
+	
+		dc=new DefaultComboBoxModel<>();
+		cmbAutores = new JComboBox(dc);
+		cmbAutores.setBounds(108, 423, 179, 20);
+		contentPane.add(cmbAutores);
+		
+		dc.addElement("Todos");
+		for(int x=0;x<autores.size();x++){
+			String autor=autores.get(x);
+			dc.addElement(autor);
+			
+		}
+		
+		lblBuscarLibros = new JLabel("Buscar Libros");
+		lblBuscarLibros.setBounds(404, 426, 110, 14);
+		contentPane.add(lblBuscarLibros);
+		
+		txtBusca = new JTextField();		
+		txtBusca.setBounds(524, 423, 240, 20);
+		contentPane.add(txtBusca);
+		txtBusca.setColumns(10);
+		
+		
+		
 		try {
 			cargarLista();
+			
 		} catch (ClassNotFoundException | SQLException | ParseException | IsbnException e) {
 			// TODO Bloque catch generado automáticamente
 			JOptionPane.showMessageDialog(table, e.getMessage());
@@ -468,9 +591,23 @@ public class FrmBiblioteca extends JFrame {
 	}
 
 
+	private void cargarAutores() {
+		// TODO Apéndice de método generado automáticamente
+		try {
+			biblioteca.abrirConexion();
+			autores=biblioteca.autores();
+			biblioteca.cerrarConexion();
+		} catch (SQLException | ParseException | IsbnException | ClassNotFoundException e1) {
+			// TODO Bloque catch generado automáticamente
+			JOptionPane.showMessageDialog(table, e1.getMessage());
+		}
+		
+	}
+
+
 	private void cargarLista() throws ClassNotFoundException, SQLException, ParseException, IsbnException {
 		// TODO Apéndice de método generado automáticamente
-		
+		libros=new ArrayList<Libro>();
 			biblioteca.abrirConexion();
 			String sql="select * from libros order by idlibros";
 			libros=biblioteca.getLibros(sql);
@@ -601,8 +738,16 @@ public class FrmBiblioteca extends JFrame {
 		biblioteca.cerrarConexion();
 		
 		return borrado;
-	
+
+	}
+	private void buscarLibros(String campo, String cadenaBusqueda) throws ClassNotFoundException, SQLException, ParseException, IsbnException {
+		// TODO Apéndice de método generado automáticamente
+		libros=new ArrayList<Libro>();		
+		biblioteca.abrirConexion();
+		libros=biblioteca.buscarLibro(campo, cadenaBusqueda);
+		biblioteca.cerrarConexion();
 		
 		
 	}
+
 }
