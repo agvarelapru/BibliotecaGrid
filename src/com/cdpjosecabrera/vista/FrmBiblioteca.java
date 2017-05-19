@@ -148,7 +148,7 @@ public class FrmBiblioteca extends JFrame {
 		});	
 		btnDeshacer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				navegar=true;habilitado=true;escribir=false;
+				navegar=true;habilitado=true;escribir=false;modificar=false;
 				cargarCursor(cursor);
 				editarPanelLibros(escribir)	;
 				habilitarPanelMantenilmiento(habilitado);
@@ -292,6 +292,8 @@ public class FrmBiblioteca extends JFrame {
 									cargarLista();
 									cursor=0;
 									cargarCursor(cursor);
+									cargarAutores();
+									cargarListaAutores();
 								}
 							} catch (IndexOutOfBoundsException e) {
 								// TODO Bloque catch generado automáticamente
@@ -554,19 +556,15 @@ public class FrmBiblioteca extends JFrame {
 		contentPane.add(lblFiltroAutor);
 		
 		
-		cargarAutores();
+		
 	
 		dc=new DefaultComboBoxModel<>();
 		cmbAutores = new JComboBox(dc);
 		cmbAutores.setBounds(108, 423, 179, 20);
 		contentPane.add(cmbAutores);
+		cargarAutores();
+		cargarListaAutores();
 		
-		dc.addElement("Todos");
-		for(int x=0;x<autores.size();x++){
-			String autor=autores.get(x);
-			dc.addElement(autor);
-			
-		}
 		
 		lblBuscarLibros = new JLabel("Buscar Libros");
 		lblBuscarLibros.setBounds(404, 426, 110, 14);
@@ -591,10 +589,24 @@ public class FrmBiblioteca extends JFrame {
 	}
 
 
+	private void cargarListaAutores() {
+		// TODO Apéndice de método generado automáticamente
+		
+		dc.addElement("Todos");
+		for(int x=0;x<autores.size();x++){
+			String autor=autores.get(x);
+			dc.addElement(autor);
+			
+		}
+		
+	}
+
+
 	private void cargarAutores() {
 		// TODO Apéndice de método generado automáticamente
 		try {
 			biblioteca.abrirConexion();
+			autores=new ArrayList<String>();
 			autores=biblioteca.autores();
 			biblioteca.cerrarConexion();
 		} catch (SQLException | ParseException | IsbnException | ClassNotFoundException e1) {
