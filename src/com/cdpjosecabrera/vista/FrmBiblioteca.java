@@ -356,7 +356,7 @@ public class FrmBiblioteca extends JFrame {
 				try {
 					cadenaBusqueda=txtBusca.getText()+"%";
 					campo="titulo";
-					buscarLibros(campo,cadenaBusqueda);
+					buscarLibros(campo,cadenaBusqueda);//busca los libros filtrados por autor devolviendo una lista
 					cargarDatos(libros);
 					cursor=0;
 					cargarCursor(cursor);
